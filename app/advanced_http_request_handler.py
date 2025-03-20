@@ -1,14 +1,14 @@
 import json
 from http.server import BaseHTTPRequestHandler
-
-from loguru import logger
-
+import logging
 from settings import STATIC_PATH, LOG_PATH, LOG_FILE
 
-logger.add(LOG_PATH + LOG_FILE,
-           format='[{time:YYYY-MM-DD HH:mm:ss}] {level}: {message}',
-           level='INFO')
-
+# Настройка логирования
+logging.basicConfig(
+    filename = LOG_PATH + LOG_FILE,
+    level = logging.INFO,
+    format = "%(asctime)s - %(levelname)s - %(message)s"
+)
 
 class AdvancedHTTPRequestHandler(BaseHTTPRequestHandler):
 
@@ -36,13 +36,13 @@ class AdvancedHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(response).encode('utf-8'))
 
     def do_GET(self):
-        logger.info(f'GET {self.path}')
+        logging.info(f'GET {self.path}')
         self.get_routes.get(self.path, self.default_response)()
 
     def do_POST(self):
-        logger.info(f'POST {self.path}')
+        logging.info(f'POST {self.path}')
         self.post_routes.get(self.path, self.default_response)()
 
     def do_DELETE(self):
-        logger.info(f'POST {self.path}')
+        logging.info(f'DELETE {self.path}')
         self.delete_routes.get(self.path, self.default_response)()

@@ -1,15 +1,12 @@
 import os
 from uuid import uuid4
-
-from loguru import logger
-
+import logging
 from advanced_http_request_handler import AdvancedHTTPRequestHandler
-from settings import IMAGES_PATH, \
-    ALLOWED_EXTENSIONS, MAX_FILE_SIZE, ERROR_FILE
+from settings import IMAGES_PATH, ALLOWED_EXTENSIONS, MAX_FILE_SIZE
 
 
 class ImageHostingHttpRequestHandler(AdvancedHTTPRequestHandler):
-    server_version = 'Image Hosting Server v0.1'
+    server_version = 'Image Hosting Server v0.2'
 
     def __init__(self, request, client_address, server):
 
@@ -32,35 +29,38 @@ class ImageHostingHttpRequestHandler(AdvancedHTTPRequestHandler):
     def post_upload(self):
         length = int(self.headers.get('Content-Length'))
         if length > MAX_FILE_SIZE:
-            logger.warning('File too large')
-            self.send_html(ERROR_FILE, 413)
+            logging.warning('File too large')
+            self.send_json({'error': 'File too large', 'code': 413})
             return
 
         data = self.rfile.read(length)
         _, ext = os.path.splitext(self.headers.get('Filename'))
         image_id = uuid4()
         if ext not in ALLOWED_EXTENSIONS:
-            logger.warning('File type not allowed')
-            self.send_html(ERROR_FILE, 400)
+            logging.warning('File type not allowed')
+            self.send_json({'error': 'File type not allowed', 'code': 415})
             return
 
-        with open(IMAGES_PATH + f'{image_id}{ext}', 'wb') as file:
+        file_name = f'{image_id}{ext}'
+        with open(IMAGES_PATH + f'{file_name}', 'wb') as file:
             file.write(data)
-        self.send_html('upload_success.html', headers={
-            'Location': f'http://localhost/{IMAGES_PATH}{image_id}{ext}'})
+        logging.info(f'Image {file_name} uploaded')
+        self.send_json({'success': f'Image uploaded as {file_name}',
+                        'location': f'http://localhost/{IMAGES_PATH}{image_id}{ext}'})
 
     def delete_image(self):
         image_id = self.headers.get('Filename')
         if not image_id:
-            logger.warning('Image not found')
-            self.send_html(ERROR_FILE, 404)
+            logging.warning('Image not found')
+            self.send_json({'error': 'Image not found', 'code': '404'})
             return
 
         image_path = IMAGES_PATH + image_id
         if not os.path.exists(image_path):
-            logger.warning('Image not found')
-            self.send_html(ERROR_FILE, 404)
+            logging.warning('Image not found')
+            self.send_json({'error': 'Image not found', 'code': '404'})
             return
 
         os.remove(image_path)
-        self.send_json({'Success': 'Image deleted'})
+        logging.info(f'Image {image_path} deleted')
+        self.send_json({'success': 'Image deleted'})

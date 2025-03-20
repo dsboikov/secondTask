@@ -17,7 +17,9 @@ const heroImages = [
 ];
 
 if(tbody) {
-	fetch('/api/images/').then(response => response.json()).then(images => setImages(images.images));
+	fetch('/api/images/')
+	.then(response => response.json())
+	.then(images => setImages(images.images));
 }
 
 if(modal) {
@@ -78,7 +80,7 @@ if(dropArea) {
 if(fileInput) {
 	fileInput.addEventListener('change', () => {
 		if(typeof fileInput.files !== 'undefined') {
-			handleFiles(fileInput.files, 'test');
+			handleFiles(fileInput.files);
 		}
 	});
 }
@@ -136,16 +138,21 @@ function uploadFile() {
 		},
 		body: file
 	})
-	.then(response => {
-		
-		document.getElementById('uploadUrl').value = response.headers.get('Location');
-		copyButton.disabled = false;
-		info('success', 'Файл загружен');
-		dropArea.classList.add('success');
-		setTimeout(() => {
-		  dropArea.classList.remove('success');
-		}, 2000)
-
+	.then(response => response.json())
+	.then(data => {
+		if(data.code == 413) {
+			info('error', 'Ошибка загрузки: файл слишком большой');
+		}else if(data.code == 415) {
+			info('error', 'Ошибка загрузки: тип файла не поддерживается');
+		}else{
+			document.getElementById('uploadUrl').value = data.location;
+			copyButton.disabled = false;
+			info('success', 'Файл загружен');
+			dropArea.classList.add('success');
+			setTimeout(() => {
+				dropArea.classList.remove('success');
+			}, 2000)
+		}
 	})
 	.catch(error => {
 		info('error', 'Ошибка загрузки:' + error);
@@ -171,14 +178,19 @@ function setImages(images) {
         const deleteButton = document.createElement('button');
         deleteButton.onclick = () => {
             fetch('/api/delete/', {
-                method: 'DELETE',
-                headers: {
-                    'Filename': image
-                }
-            })
-            .then(data => {
-                location.reload();
-            })
+				method: 'DELETE',
+				headers: {
+					'Filename': image
+				}
+			})
+			.then(response => response.json())
+			.then(data => {
+				if(data.code != 404) {
+					location.reload();
+				}else{
+					console.log(data);
+				}
+			});
         }
         deleteButton.innerHTML = '<img src="/img/trash.png" width="15" height="auto">';
         tdDelete.appendChild(deleteButton);
@@ -198,7 +210,7 @@ function setImages(images) {
 }
 
 function info(infoType, infoText) {
-	const infoPlace = document.getElementById('info');
+	let infoPlace = document.getElementById('info');
 	infoPlace.textContent = infoText;
 	infoPlace.classList.add(infoType);
 	
