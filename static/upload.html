@@ -1,10 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Хостинг изображений</title>
+	<link rel="shortcut icon" href="/img/favicon.ico" />
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
+<header class="main-header">
+    <h1>Загрузите изображения</h1>
+    <p>Загружайте сюда селфи, мемы или любые забавные картинки.</p>
+    <div>
+		<button id="btnGoToImages" class="button">Показать галерею</button>
+	</div>
+</header>
+
+<main>
+    <section id="upload" class="tab-content active">
+        <div class="upload-area" id="drop-area">
+            <div class="upload-area__icon">
+                <img src="/img/upload.png" alt="Upload Icon" width="70" height="50"/>
+            </div>
+            <p>Выберите файл или перетащите сюда</p>
+            <p class="upload-area__subtext">
+				Формат файлов .jpg, .jpeg, .png и .gif.<br>
+				Максимальный размер файла 5МБ
+			</p>            
+        </div>
+		<input type="file" id="fileInput" hidden>
+        <div>
+            <button id="browseButton" class="button">Выберите файл</button>
+        </div>
+        <div class="current-upload">
+            <label for="uploadUrl">Текущая загрузка</label>
+            <div class="current-upload__field">
+                <input type="text" id="uploadUrl" placeholder="http://"/>
+                <button id="copyButton" disabled><img src="/img/copy.png" alt="Copy" width="25" height="auto"></button>
+            </div>
+        </div>
+    </section>
+</main>
+<div id="info"></div>
+<script src="/js/script.js?v=3"></script>
 </body>
 </html>
