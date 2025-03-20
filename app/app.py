@@ -7,7 +7,7 @@ from settings import SERVER_ADDRESS, LOG_PATH, LOG_FILE
 logging.basicConfig(
     filename = LOG_PATH + LOG_FILE,
     level = logging.INFO,
-    format = "[%(asctime)s] - %(levelname)s - %(message)s"
+    format = "[%(asctime)s] %(levelname)s %(message)s"
 )
 
 def run(server_class=HTTPServer, handler_class=ImageHostingHttpRequestHandler):

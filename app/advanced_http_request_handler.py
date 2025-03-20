@@ -3,13 +3,6 @@ from http.server import BaseHTTPRequestHandler
 import logging
 from settings import STATIC_PATH, LOG_PATH, LOG_FILE
 
-# Настройка логирования
-logging.basicConfig(
-    filename = LOG_PATH + LOG_FILE,
-    level = logging.INFO,
-    format = "%(asctime)s - %(levelname)s - %(message)s"
-)
-
 class AdvancedHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
