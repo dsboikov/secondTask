@@ -36,13 +36,13 @@ class AdvancedHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(response).encode('utf-8'))
 
     def do_GET(self):
-        logging.info(f'GET {self.path}')
+        logging.info(f'GET: {self.path}')
         self.get_routes.get(self.path, self.default_response)()
 
     def do_POST(self):
-        logging.info(f'POST {self.path}')
+        logging.info(f'POST: {self.path}')
         self.post_routes.get(self.path, self.default_response)()
 
     def do_DELETE(self):
-        logging.info(f'DELETE {self.path}')
+        logging.info(f'DELETE: {self.path}')
         self.delete_routes.get(self.path, self.default_response)()
