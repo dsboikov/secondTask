@@ -16,10 +16,41 @@ const heroImages = [
 	'/img/hero/hero5.png'
 ];
 
+// Проверка наличия таблицы изображений и заполнение ее данными
 if(tbody) {
-	fetch('/api/images/')
-	.then(response => response.json())
-	.then(images => setImages(images.images));
+    // Получение текущей страницы из параметров URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const page = Math.max(1, parseInt(urlParams.get('page')) || 1);
+    const limit = parseInt(urlParams.get('limit')) || 10;
+
+    // Если страница меньше 1, перенаправляем на первую страницу
+    if (page < 1) {
+        window.location.href = '/images/?page=1';
+    }
+
+	// Загрузка данных о количестве изображений и обработка пагинации
+    fetch('/api/images_count/')
+    .then(response => response.json())
+    .then(({ count }) => {
+        const imagesCount = count;
+        const pagesCount = Math.ceil(imagesCount / 10);
+
+        // Если запрошенная страница больше общего числа страниц, перенаправляем на последнюю
+        if (page > pagesCount && pagesCount > 0) {
+            window.location.href = `/images/?page=${pagesCount}`;
+        }
+
+        // Если есть хоть одна страница с изображениями, добавляем кнопки пагинации и загружаем изображения
+        if (pagesCount >= 1) {
+            // Создание кнопок пагинации
+            addPagination(page, pagesCount);
+
+            // Получение изображений для текущей страницы
+            fetch('/api/images/', { headers: { 'Page': page, 'Limit': limit } })
+            .then(response => response.json())
+            .then(({ images }) => setImages(images));
+        }
+    });
 }
 
 if(modal) {
@@ -97,7 +128,7 @@ if(copyButton) {
 			}, 2000);
 		})
 		.catch((err) => {
-			info('error', 'Failed to copy: ' + err);
+			info('error', 'Ошибка копирования: ' + err);
 		});
 	});
 }
@@ -163,50 +194,29 @@ function uploadFile() {
 }
 
 function setImages(images) {
-    const imagesContainer = document.createElement('div');
+    const imagesContainer = document.getElementById('imagesTableBody');
     images.forEach(image => {
-		
-		if(image == '.gitignore') {
-			return;
-		}
+		const fullname = image.filename + image.file_type;
         const tr = document.createElement('tr');
+        const cells = [
+            { content: `<img src="/images/${fullname}" onclick="showModalImg('/images/${fullname}')" width="42" height="100%">` },
+            { content: `<a href="/images/${fullname}" target="_blank">${image.filename}</a>` },
+            { content: image.original_name },
+            { content: `${Math.round(image.size / 1024)} KB` },
+            { content: image.upload_time },
+            { content: image.file_type },
+            { content: createDeleteButton(fullname) }
+        ];
 
-        const tdPreview = document.createElement('td');
-        const tdUrl = document.createElement('td');
-        const tdDelete = document.createElement('td');
+        cells.forEach(({ content }) => {
+            const td = document.createElement('td');
+            td.innerHTML = content;
+            tr.appendChild(td);
+        });
 
-        const deleteButton = document.createElement('button');
-        deleteButton.onclick = () => {
-            fetch('/api/delete/', {
-				method: 'DELETE',
-				headers: {
-					'Filename': image
-				}
-			})
-			.then(response => response.json())
-			.then(data => {
-				if(data.code != 404) {
-					location.reload();
-				}else{
-					console.log(data);
-				}
-			});
-        }
-        deleteButton.innerHTML = '<img src="/img/trash.png" width="15" height="auto">';
-        tdDelete.appendChild(deleteButton);
-        tdPreview.innerHTML = `<img src="/images/${image}" width="42" height="100%">`;
-        deleteButton.classList.add('delete-btn');
-        tdDelete.appendChild(deleteButton);
-        tdPreview.innerHTML = `<img src="/images/${image}" width="42" height="100%">`;
-        tdUrl.innerHTML = `<p onclick="showModalImg('/images/${image}')">${image}</p>`;
+        imagesContainer.appendChild(tr);
 
-        tr.appendChild(tdPreview);
-        tr.appendChild(tdUrl);
-        tr.appendChild(tdDelete);
-
-        tbody.appendChild(tr);
     });
-    document.body.appendChild(imagesContainer);
 }
 
 function info(infoType, infoText) {
@@ -220,7 +230,63 @@ function info(infoType, infoText) {
     }, 3000)
 }
 
+// Функция для открытия модального окна с изображением
 function showModalImg(src) {
 	modal.classList.add('opened');
 	modalImage[0].innerHTML = `<img src="${src}">`;
+}
+
+// Функция для создания кнопки удаления
+function createDeleteButton(fullname) {
+    return `
+        <button class="delete-btn" onclick="deleteImage('${fullname}')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+            </svg>
+        </button>
+    `;
+}
+
+// Функция для удаления изображения
+function deleteImage(fullname) {
+    fetch(`/api/delete/${fullname}`, { method: 'DELETE' })
+        .then(() => location.reload());
+}
+
+
+
+// Функция для создания кнопок пагинации
+function addPagination(currentPage, totalPages) {
+    const paginationContainer = document.getElementById('pagination');
+
+    // Добавление кнопки "назад"
+    addPaginationButton(currentPage - 1, '⟵', false, totalPages);
+
+    // Добавление кнопок для всех страниц
+    for (let i = 1; i <= totalPages; i++) {
+        addPaginationButton(i, '', i === currentPage, totalPages);
+    }
+
+    // Добавление кнопки "вперед"
+    addPaginationButton(currentPage + 1, '⟶', false, totalPages);
+}
+
+// Функция для добавления одной кнопки пагинации
+function addPaginationButton(page, text, active, totalPages) {
+    let element;
+    if (page < 1 || page > totalPages || active) {
+        element = document.createElement('span');
+    } else {
+        element = document.createElement('a');
+        element.href = `/images/?page=${page}`;
+    }
+
+    if (active) {
+        element.classList.add('active');
+    }
+
+    text = text || page;
+    element.textContent = text;
+
+    document.getElementById('pagination').appendChild(element);
 }
