@@ -1,12 +1,15 @@
 import json
 from http.server import BaseHTTPRequestHandler
 import logging
-from settings import STATIC_PATH, LOG_PATH, LOG_FILE
+from router import Router
+from settings import STATIC_PATH
+
 
 class AdvancedHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
         self.default_response = lambda: self.send_html('404.html', 404)
+        self.router = Router()
         super().__init__(request, client_address, server)
 
     def send_html(self, file, code=200, headers=None, file_path=STATIC_PATH):
@@ -28,14 +31,19 @@ class AdvancedHTTPRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(response).encode('utf-8'))
 
+    def do_request(self, method):
+        logging.info(f'{method} {self.path}')
+        handler, params = self.router.resolve(method, self.path)
+        if handler:
+            handler(self, **params)
+        else:
+            self.default_response()
+
     def do_GET(self):
-        logging.info(f'GET: {self.path}')
-        self.get_routes.get(self.path, self.default_response)()
+        self.do_request('GET')
 
     def do_POST(self):
-        logging.info(f'POST: {self.path}')
-        self.post_routes.get(self.path, self.default_response)()
+        self.do_request('POST')
 
     def do_DELETE(self):
-        logging.info(f'DELETE: {self.path}')
-        self.delete_routes.get(self.path, self.default_response)()
+        self.do_request('DELETE')
