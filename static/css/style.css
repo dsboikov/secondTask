@@ -10,7 +10,6 @@ body {
 	color: #333;
 	text-align: center;
 	padding: 20px;
-	height: 100vh;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -126,7 +125,7 @@ body.notfound h1 {
 
 .tab-content {
 	display: none;
-	max-width: 600px;
+	max-width: 1100px;
 	margin: 0 auto;
 	text-align: center;
 }
@@ -219,10 +218,6 @@ button, .button:hover {
 	text-align: left;
 }
 
-thead {
-	display: none;
-}
-
 .images-table:has(#imagesTableBody p) thead {
 	display: table-header-group;
 }
@@ -233,7 +228,9 @@ thead {
 }
 
 .images-table th {
-	background-color: #f0f0f0;
+	background-color: #ddd;
+	font-size: .8em;
+    font-weight: 100;
 }
 
 .images-table td {
@@ -259,6 +256,10 @@ thead {
 
 .delete-btn:hover {
 	background: #cc0000;
+}
+
+.delete-btn svg {
+    margin-top: 3px;
 }
 
 .upload-area.dragover {
@@ -356,3 +357,34 @@ thead {
 	text-decoration: none;
 	cursor: pointer;
 }
+
+.pagination {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: space-evenly;
+    width: max-content;
+    margin: 1em auto;
+}
+
+.pagination a, .pagination span {
+    color: black;
+    padding: 8px 16px;
+    text-decoration: none;
+    margin: 0 2px;
+}
+
+.pagination .active {
+    background-color: #0066FF;
+    color: white;
+    border-radius: 5px;
+}
+
+.pagination a:hover:not(.active) {
+    background-color: #ddd;
+    border-radius: 5px;
+}
+
+#imagesTableBody img:hover {cursor: pointer;}
