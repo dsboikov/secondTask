@@ -5,3 +5,4 @@
 .well-known
 .env
 .venv
+*.sql
